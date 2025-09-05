@@ -21,6 +21,29 @@ api_teams_info = '/v0/teams'
 # --------------------------
 # Database Setup
 # --------------------------
+
+DB_TYPE = os.getenv("DB_TYPE", "SQLITE").upper()
+
+if DB_TYPE == "REDSHIFT":
+    # Build the Redshift connection string from environment variables
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
+    dbname = os.getenv("DB_NAME")
+    
+    if not all([user, password, host, port, dbname]):
+        raise ValueError("Missing one or more Redshift database environment variables (DB_USER, DB_PASSWORD, etc.)")
+        
+    connection_string = f"redshift+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+    print(f"[bold blue]Connecting to Redshift database at {host}...[/bold blue]")
+else:
+    # Default to a persistent SQLite file for local development/testing
+    connection_string = 'sqlite:///device_inventory.db'
+    print("[bold blue]Using local SQLite database (device_inventory.db)...[/bold blue]")
+
+engine = create_engine(connection_string)
+
 class Base(DeclarativeBase):
     pass
 
